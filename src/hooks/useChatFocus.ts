@@ -1,4 +1,4 @@
-import { createContext, useContext, useRef, useCallback } from 'react';
+import { createContext, useContext, useRef, useCallback, useEffect } from 'react';
 
 interface ChatFocusContextType {
   inputRef: React.RefObject<HTMLInputElement>;
@@ -11,10 +11,21 @@ export function useChatFocusProvider() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const focusInput = useCallback(() => {
-    if (inputRef.current) {
-      inputRef.current.focus();
-    }
+    // Use double requestAnimationFrame to ensure the input is ready
+    // and any UI updates have completed
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+        }
+      });
+    });
   }, []);
+
+  // Auto-focus on mount
+  useEffect(() => {
+    focusInput();
+  }, [focusInput]);
 
   return {
     inputRef,

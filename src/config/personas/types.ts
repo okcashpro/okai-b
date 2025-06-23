@@ -1,5 +1,13 @@
 export type ChatLength = 'short' | 'normal' | 'long';
 
+export interface PersonaStyle {
+  emoticons?: string[];
+  expressions: string[];
+  endPhrases: string[];
+  removals: RegExp[];
+  formatters: ((content: string) => string)[];
+}
+
 export interface AIPersona {
   name: string;
   description: string;
@@ -8,9 +16,6 @@ export interface AIPersona {
   customKnowledge?: string[];
   displayOrder?: number;
   model?: string;
-  chatLength?: ChatLength; // New property for controlling response length
-}
-
-export interface PersonaConfig {
-  [key: string]: AIPersona;
+  chatLength?: ChatLength;
+  style?: PersonaStyle;
 }

@@ -1,17 +1,25 @@
-import { loadPersonas } from './loadPersonas';
+import { personaManager } from '../../utils/personas';
+import { restoreManager } from '../../utils/restore';
+import { logger } from '../../utils/logger';
 
-// Load all personas
-const allPersonas = loadPersonas();
-
-// Set okai as default, or first persona if okai doesn't exist
-const defaultPersona = allPersonas.okai || Object.values(allPersonas)[0];
-
-if (!defaultPersona) {
-  throw new Error('No personas found in the personas directory!');
+// Initialize persona system
+async function initializePersonas() {
+  try {
+    // Get current personas
+    const current = await personaManager.listPersonas();
+    
+    // If no personas exist, restore original ones
+    if (current.length === 0) {
+      await restoreManager.restoreOriginalPersonas();
+      logger.info('Initialized with original personas');
+    }
+  } catch (error) {
+    logger.error('Error initializing personas:', error);
+  }
 }
 
-// Export the final personas object with default
-export const personas = {
-  ...allPersonas,
-  default: defaultPersona
-};
+// Initialize on module load
+void initializePersonas();
+
+// Export persona manager for direct access
+export { personaManager as personas };

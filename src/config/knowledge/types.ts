@@ -14,4 +14,5 @@ export interface KnowledgeBase {
   sampleQA?: {
     [category: string]: QandA[];
   };
+  knowledgeData: string; // Required detailed knowledge content
 }

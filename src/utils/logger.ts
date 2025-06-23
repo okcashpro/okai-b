@@ -1,5 +1,4 @@
-/* eslint-disable no-console */
-type LogLevel = 'debug' | 'info' | 'warn' | 'error';
+import type { LogLevel } from './types';
 
 interface LogEntry {
   timestamp: string;
@@ -36,7 +35,11 @@ class Logger {
     }
 
     if (import.meta.env.DEV) {
-      console[level](message, data);
+      if (data) {
+        console[level](message, data);
+      } else {
+        console[level](message);
+      }
     }
   }
 

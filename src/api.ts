@@ -1,33 +1,18 @@
 import OpenAI from 'openai';
 import { config } from './config/env';
+import { apiKeyManager } from './utils/apiKeyManager';
+import { getSelectedModel } from './config/models';
 import type { Message } from './types';
 import type { AIPersona } from './config/personas/types';
-import { processMessages } from './utils/messageProcessor';
 import { formatResponse } from './utils/responseFormatter';
 import { findBestMatch, integrateKnowledge } from './utils/knowledgeIntegration';
 import { logger } from './utils/logger';
 import { analytics } from './utils/analytics';
 import { metrics } from './utils/metrics';
 import { RateLimiter } from './utils/rateLimit';
-import { ValidationError, APIError } from './utils/errors';
+import { APIError } from './utils/errors';
 
-const DEFAULT_MODEL = "cognitivecomputations/dolphin-mixtral-8x22b";
 const rateLimiter = RateLimiter.getInstance();
-
-// Validate API key before creating client
-if (!config.openRouterApiKey) {
-  throw new Error('OpenRouter API key is required. Please add VITE_OPENROUTER_API_KEY to your .env file.');
-}
-
-const openai = new OpenAI({
-  baseURL: "https://openrouter.ai/api/v1",
-  apiKey: config.openRouterApiKey,
-  defaultHeaders: {
-    "HTTP-Referer": config.siteUrl || window.location.origin,
-    "X-Title": config.appName || 'OKai S',
-  },
-  dangerouslyAllowBrowser: true
-});
 
 export async function sendMessage(messages: Message[], persona: AIPersona): Promise<Message | undefined> {
   const requestId = crypto.randomUUID();
@@ -39,15 +24,31 @@ export async function sendMessage(messages: Message[], persona: AIPersona): Prom
       throw new Error('Rate limit exceeded');
     }
 
-    // Process and validate all messages
-    const processedMessages = processMessages(messages);
-    if (processedMessages.length === 0) {
-      throw new ValidationError('No valid messages to process');
+    // Validate persona
+    if (!persona) {
+      throw new APIError('No AI agent selected. Please select an AI agent before sending messages.', 400);
     }
 
-    const lastMessage = processedMessages[processedMessages.length - 1];
-    if (lastMessage.role !== 'user') {
-      throw new ValidationError('Last message must be from user');
+    // Get active API key
+    const activeKey = apiKeyManager.getActiveApiKey();
+    if (!activeKey) {
+      throw new APIError('OpenRouter API key is missing. Please add your API key in the settings.', 401);
+    }
+
+    // Create OpenAI client with active key
+    const openai = new OpenAI({
+      baseURL: "https://openrouter.ai/api/v1",
+      apiKey: activeKey,
+      defaultHeaders: {
+        "HTTP-Referer": config.siteUrl || window.location.origin,
+        "X-Title": config.appName || 'Super Okai',
+      },
+      dangerouslyAllowBrowser: true
+    });
+
+    const lastMessage = messages[messages.length - 1];
+    if (!lastMessage) {
+      throw new APIError('No message content provided', 400);
     }
 
     // Get knowledge context
@@ -63,6 +64,8 @@ export async function sendMessage(messages: Message[], persona: AIPersona): Prom
 KNOWLEDGE BASE INTEGRATION:
 1. Topics of Expertise: ${integrated.topics.join(', ')}
 2. Context-Specific Instructions: ${integrated.prompts.join(' ')}
+${integrated.knowledgeData.length > 0 ? `3. Detailed Knowledge:
+${integrated.knowledgeData.join('\n\n')}` : ''}
 
 ${matchingQA ? `VERIFIED KNOWLEDGE BASE ANSWER:
 Source: ${matchingQA.source}
@@ -78,8 +81,8 @@ RESPONSE GUIDELINES:
 
     try {
       const completion = await openai.chat.completions.create({
-        model: persona.model || DEFAULT_MODEL,
-        messages: [systemMessage, ...processedMessages].map(m => ({
+        model: persona.model || getSelectedModel(),
+        messages: [systemMessage, ...messages].map(m => ({
           role: m.role,
           content: m.content
         }))
@@ -87,7 +90,7 @@ RESPONSE GUIDELINES:
 
       const response = completion.choices[0].message;
       if (!response?.content) {
-        throw new Error('No response content received');
+        throw new APIError('No response content received', 500);
       }
 
       const formattedResponse = formatResponse(
@@ -108,11 +111,20 @@ RESPONSE GUIDELINES:
       if (error.status === 401) {
         throw new APIError('Invalid OpenRouter API key. Please check your configuration.', 401);
       }
-      throw error;
+      if (error.status === 429) {
+        throw new APIError('Rate limit exceeded. Please try again later.', 429);
+      }
+      throw new APIError(
+        error.message || 'Failed to get response from OpenRouter API',
+        error.status || 500
+      );
     }
 
   } catch (error) {
+    if (error instanceof APIError) {
+      throw error;
+    }
     logger.error('Error in sendMessage:', error);
-    throw error;
+    throw new APIError('An unexpected error occurred while processing your message', 500);
   }
 }

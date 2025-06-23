@@ -2,64 +2,264 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  color-scheme: dark;
-}
-
+/* Base Theme */
 @layer base {
+  :root {
+    color-scheme: dark;
+    background-color: #000000;
+  }
+
   html, body {
-    @apply h-full bg-gray-900 text-white;
+    @apply h-full bg-black;
+    background-color: #000000;
   }
   
   #root {
-    @apply h-full;
+    @apply h-full bg-black;
   }
 }
 
-/* Typing animation */
-@keyframes typing {
-  from {
-    clip-path: inset(0 100% 0 0);
+/* Layout Components */
+@layer components {
+  .app-container {
+    @apply flex flex-col h-full bg-black;
   }
-  to {
-    clip-path: inset(0 0 0 0);
+
+  .header {
+    @apply flex-none p-4 border-b border-emerald-950/30 bg-black;
+  }
+
+  .main-content {
+    @apply flex-1 overflow-y-auto bg-black;
+  }
+
+  .footer {
+    @apply flex-none border-t border-emerald-950/30 bg-black;
   }
 }
 
-.typing-text {
-  position: relative;
-  display: inline-block;
-  white-space: pre-wrap;
-  animation: typing 1s ease-out;
-  width: 100%;
-}
-
-.typing-indicator {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 8px;
-}
-
-.typing-indicator .dot {
-  width: 4px;
-  height: 4px;
-  background-color: #60A5FA;
-  border-radius: 50%;
-  animation: bounce 1.4s infinite ease-in-out;
-}
-
-.typing-indicator .dot:nth-child(1) { animation-delay: 0s; }
-.typing-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
-.typing-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes bounce {
-  0%, 60%, 100% {
-    transform: translateY(0);
-    opacity: 0.4;
+/* Message Components */
+@layer components {
+  .message-user {
+    @apply bg-black border-l-4 border-emerald-500/30 relative overflow-hidden;
   }
-  30% {
-    transform: translateY(-4px);
-    opacity: 1;
+
+  .message-assistant {
+    @apply bg-black border-l-4 border-emerald-500/30 relative overflow-hidden;
+  }
+
+  .message-content {
+    @apply max-w-4xl mx-auto flex gap-4;
+  }
+
+  .message-icon {
+    @apply flex-shrink-0 w-8 h-8 flex items-center justify-center;
+  }
+
+  .message-text {
+    @apply flex-1 min-w-0 prose prose-invert max-w-none;
+  }
+
+  /* Gamified message hover effect */
+  .message-user:hover, .message-assistant:hover {
+    @apply bg-emerald-950/5;
+  }
+
+  /* Gamified glow effects */
+  .glow-effect {
+    @apply relative overflow-hidden;
+  }
+
+  .glow-effect::before {
+    content: '';
+    @apply absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-emerald-500/0 opacity-0 transition-opacity duration-300;
+  }
+
+  .glow-effect:hover::before {
+    @apply opacity-100;
+  }
+}
+
+/* Matrix Rain Effect */
+.matrix-rain {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(180deg, 
+    rgba(0, 255, 170, 0.1) 0%,
+    rgba(0, 255, 170, 0.05) 50%,
+    transparent 100%
+  );
+  animation: matrix-rain 2s linear infinite;
+  background-size: 200% 200%;
+}
+
+@keyframes matrix-rain {
+  0% {
+    background-position: 0% 0%;
+  }
+  100% {
+    background-position: 0% 200%;
+  }
+}
+
+/* Button Components */
+@layer components {
+  .btn-primary {
+    @apply px-4 py-2 bg-emerald-600/20 text-emerald-400 rounded-lg transition-all duration-200 
+           hover:bg-emerald-600/30 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed
+           disabled:hover:scale-100 border border-emerald-500/20 hover:border-emerald-500/30;
+  }
+
+  .btn-secondary {
+    @apply px-4 py-2 bg-gray-800/20 text-gray-300 rounded-lg transition-all duration-200 
+           hover:bg-gray-800/30 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed
+           disabled:hover:scale-100 border border-gray-700/20 hover:border-gray-700/30;
+  }
+
+  .btn-danger {
+    @apply px-4 py-2 bg-red-600/20 text-red-400 rounded-lg transition-all duration-200 
+           hover:bg-red-600/30 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed
+           disabled:hover:scale-100 border border-red-500/20 hover:border-red-500/30;
+  }
+}
+
+/* Form Components */
+@layer components {
+  .input-primary {
+    @apply w-full px-4 py-2 bg-black border border-emerald-950/30 rounded-lg 
+           text-white placeholder-gray-500 focus:outline-none focus:ring-2 
+           focus:ring-emerald-500/20 focus:border-emerald-500/30 transition-all duration-200;
+  }
+
+  .select-primary {
+    @apply bg-black border border-emerald-950/30 rounded-lg text-white;
+  }
+
+  .checkbox-primary {
+    @apply w-4 h-4 bg-black border border-emerald-950/30 rounded 
+           text-emerald-600 focus:ring-emerald-500/20;
+  }
+}
+
+/* Card Components */
+@layer components {
+  .card {
+    @apply bg-black rounded-xl border border-emerald-950/30 p-4 transition-all duration-200
+           hover:border-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/5;
+  }
+
+  .card-header {
+    @apply flex items-center justify-between mb-4;
+  }
+
+  .card-title {
+    @apply text-lg font-semibold text-white;
+  }
+
+  .card-content {
+    @apply text-gray-300;
+  }
+}
+
+/* Scrollbar Styling */
+@layer utilities {
+  .custom-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(16, 185, 129, 0.2) transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    @apply bg-black;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-emerald-900/30 rounded-full hover:bg-emerald-800/30;
+  }
+}
+
+/* Animation Utilities */
+@layer utilities {
+  .typing-text {
+    position: relative;
+    display: inline-block;
+    white-space: pre-wrap;
+    animation: typing 1s ease-out;
+    width: 100%;
+  }
+
+  @keyframes typing {
+    from { clip-path: inset(0 100% 0 0); }
+    to { clip-path: inset(0 0 0 0); }
+  }
+
+  .typing-indicator {
+    @apply inline-flex items-center gap-1 mt-2;
+  }
+
+  .typing-indicator .dot {
+    @apply w-1 h-1 bg-emerald-400 rounded-full;
+    animation: bounce 1.4s infinite ease-in-out;
+  }
+
+  .typing-indicator .dot:nth-child(1) { animation-delay: 0s; }
+  .typing-indicator .dot:nth-child(2) { animation-delay: 0.2s; }
+  .typing-indicator .dot:nth-child(3) { animation-delay: 0.4s; }
+
+  @keyframes bounce {
+    0%, 60%, 100% {
+      transform: translateY(0);
+      opacity: 0.4;
+    }
+    30% {
+      transform: translateY(-4px);
+      opacity: 1;
+    }
+  }
+
+  /* Gamified animations */
+  .hover-scale {
+    @apply transition-transform duration-200 hover:scale-105;
+  }
+
+  .pulse-glow {
+    animation: pulse-glow 2s infinite;
+  }
+
+  @keyframes pulse-glow {
+    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.1); }
+    70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
+  }
+
+  .floating {
+    animation: floating 3s ease-in-out infinite;
+  }
+
+  @keyframes floating {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+  }
+}
+
+/* Prose Styles */
+@layer utilities {
+  .prose-custom {
+    @apply prose prose-invert 
+           prose-headings:text-emerald-400
+           prose-p:text-gray-300
+           prose-a:text-emerald-400
+           prose-strong:text-emerald-400
+           prose-code:text-emerald-400
+           prose-pre:bg-black
+           prose-pre:border
+           prose-pre:border-emerald-950/30;
   }
 }

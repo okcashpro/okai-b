@@ -13,6 +13,7 @@ interface IntegratedKnowledge {
     category: string;
     source: string;
   }[];
+  knowledgeData: string[];
 }
 
 interface QAMatch {
@@ -60,7 +61,8 @@ export async function integrateKnowledge(persona: AIPersona): Promise<Integrated
   const integrated: IntegratedKnowledge = {
     topics: [...(persona.customKnowledge || [])],
     prompts: [],
-    qa: []
+    qa: [],
+    knowledgeData: []
   };
 
   // Integrate knowledge bases
@@ -90,10 +92,17 @@ export async function integrateKnowledge(persona: AIPersona): Promise<Integrated
         });
       });
     }
+
+    // Add knowledge data
+    if (kb.knowledgeData) {
+      integrated.knowledgeData.push(kb.knowledgeData);
+    }
   });
 
-  // Deduplicate topics
+  // Deduplicate arrays
   integrated.topics = Array.from(new Set(integrated.topics));
+  integrated.prompts = Array.from(new Set(integrated.prompts));
+  integrated.knowledgeData = Array.from(new Set(integrated.knowledgeData));
 
   cache.set(cacheKey, integrated, { maxAge: 3600000 }); // 1 hour
   return integrated;

@@ -34,7 +34,8 @@ const knowledgeBaseSchema = z.object({
   sampleQA: z.record(z.array(z.object({
     question: z.string().min(1, 'Question cannot be empty'),
     answer: z.string().min(1, 'Answer cannot be empty')
-  }))).optional()
+  }))).optional(),
+  knowledgeData: z.string().min(1, 'Knowledge data is required')
 });
 
 export function validateMessages(messages: unknown): Message[] {
